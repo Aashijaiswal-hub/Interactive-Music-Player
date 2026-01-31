@@ -9,7 +9,7 @@ const DISCOVERY_TRACKS: Track[] = [
         id: '1',
         title: 'Ambient Piano',
         artist: 'Relaxing Sounds',
-        url: '/music/SoundHelix-Song-1.mp3', // Using the proxy path
+        url: '/music/SoundHelix-Song-1.mp3', 
         coverUrl: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400&q=80',
     },
     {

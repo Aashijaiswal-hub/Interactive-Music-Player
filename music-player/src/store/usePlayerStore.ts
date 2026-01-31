@@ -146,7 +146,6 @@ export const usePlayerStore = create<PlayerState>()(
                 get().playTrack(queue[prevIndex]);
             },
 
-            // Library Logic
             toggleLike: (track) => {
                 const { likedTracks } = get();
                 const exists = likedTracks.some(t => t.id === track.id);
@@ -174,7 +173,6 @@ export const usePlayerStore = create<PlayerState>()(
                 }));
             },
 
-            // THE FIX: Fully implemented function
             importLocalTrack: (file) => {
                 const url = URL.createObjectURL(file);
                 const newTrack: Track = {
@@ -187,18 +185,15 @@ export const usePlayerStore = create<PlayerState>()(
                 };
 
                 const { playlists } = get();
-
-                // 1. Find existing "Local Files" playlist or create one
                 let localPlaylist = playlists.find(p => p.name === 'Local Files');
 
-                // We use an updater function inside set() to ensure we are working with the latest state
                 set(state => {
                     let updatedPlaylists = [...state.playlists];
                     let targetPlaylistId = localPlaylist?.id;
 
                     if (!localPlaylist) {
                         const newPlaylist = {
-                            id: 'local-files', // Static ID helps identify it easily
+                            id: 'local-files',
                             name: 'Local Files',
                             tracks: [newTrack]
                         };
@@ -206,7 +201,7 @@ export const usePlayerStore = create<PlayerState>()(
                     } else {
                         updatedPlaylists = updatedPlaylists.map(p =>
                             p.id === targetPlaylistId
-                                ? { ...p, tracks: [newTrack, ...p.tracks] } // Add to top of folder
+                                ? { ...p, tracks: [newTrack, ...p.tracks] }
                                 : p
                         );
                     }
@@ -218,7 +213,6 @@ export const usePlayerStore = create<PlayerState>()(
         {
             name: 'player-storage',
             storage: createJSONStorage(() => localStorage),
-            // We persist preferences, but NOT local file URLs (they expire)
             partialize: (state) => ({
                 volume: state.volume,
                 likedTracks: state.likedTracks,
