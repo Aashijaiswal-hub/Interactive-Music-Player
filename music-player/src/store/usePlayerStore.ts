@@ -20,6 +20,8 @@ export interface Playlist {
 type RepeatMode = 'none' | 'all' | 'one';
 
 interface PlayerState {
+    removeLocalTrack: any;
+    localTracks: any;
     // Core State
     isPlaying: boolean;
     isPaused: boolean;
@@ -55,7 +57,6 @@ interface PlayerState {
 export const usePlayerStore = create<PlayerState>()(
     persist(
         (set, get) => ({
-            // Initial State
             isPlaying: false,
             isPaused: false,
             volume: 1,
@@ -66,13 +67,12 @@ export const usePlayerStore = create<PlayerState>()(
             repeatMode: 'none',
             playlists: [],
             likedTracks: [],
+            localTracks: [],
 
-            // Simple Setters
             setIsPlaying: (status) => set({ isPlaying: status }),
             setVolume: (vol) => set({ volume: vol }),
             setQueue: (tracks) => set({ queue: tracks, originalQueue: tracks }),
 
-            // Playback Logic
             playTrack: (track) => {
                 set({ activeTrack: track, isPlaying: true, isPaused: false });
                 audioController.setSource(track.url);
@@ -94,10 +94,8 @@ export const usePlayerStore = create<PlayerState>()(
             toggleShuffle: () => {
                 const { isShuffling, queue, originalQueue, activeTrack } = get();
                 if (isShuffling) {
-                    // Restore
                     set({ isShuffling: false, queue: originalQueue });
                 } else {
-                    // Shuffle
                     const shuffled = [...queue].sort(() => Math.random() - 0.5);
                     if (activeTrack) {
                         const withoutActive = shuffled.filter(t => t.id !== activeTrack.id);
@@ -181,34 +179,19 @@ export const usePlayerStore = create<PlayerState>()(
                     artist: 'Local File',
                     url,
                     coverUrl: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400&q=80',
-                    isLocal: true
                 };
 
-                const { playlists } = get();
-                let localPlaylist = playlists.find(p => p.name === 'Local Files');
-
-                set(state => {
-                    let updatedPlaylists = [...state.playlists];
-                    let targetPlaylistId = localPlaylist?.id;
-
-                    if (!localPlaylist) {
-                        const newPlaylist = {
-                            id: 'local-files',
-                            name: 'Local Files',
-                            tracks: [newTrack]
-                        };
-                        updatedPlaylists = [newPlaylist, ...updatedPlaylists];
-                    } else {
-                        updatedPlaylists = updatedPlaylists.map(p =>
-                            p.id === targetPlaylistId
-                                ? { ...p, tracks: [newTrack, ...p.tracks] }
-                                : p
-                        );
-                    }
-
-                    return { playlists: updatedPlaylists };
-                });
-            }
+                set((state) => ({
+                    localTracks: [newTrack, ...state.localTracks],
+                    activeTrack: newTrack,
+                    isPlaying: true
+                }));
+            },
+            removeLocalTrack: (trackId: string) => {
+                set((state) => ({
+                    localTracks: state.localTracks.filter((t: { id: string; }) => t.id !== trackId)
+                }));
+            },
         }),
         {
             name: 'player-storage',
